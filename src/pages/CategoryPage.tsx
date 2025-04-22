@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import ArticleCard from '@/components/ArticleCard';
@@ -21,12 +21,15 @@ const categoryDescriptions: Record<Category, string> = {
 
 const CategoryPage = () => {
   const { category } = useParams<{ category: Category }>();
-  const articles = useBlogStore((state) => 
-    state.getArticlesByCategory(category as Category)
-  );
   
-  const title = categoryTitles[category as Category] || 'Articles';
-  const description = categoryDescriptions[category as Category] || '';
+  // Use useMemo to prevent unnecessary recalculations on each render
+  const articles = useMemo(() => {
+    if (!category) return [];
+    return useBlogStore.getState().getArticlesByCategory(category as Category);
+  }, [category]);
+  
+  const title = category ? (categoryTitles[category as Category] || 'Articles') : 'Articles';
+  const description = category ? (categoryDescriptions[category as Category] || '') : '';
   
   useEffect(() => {
     window.scrollTo(0, 0);

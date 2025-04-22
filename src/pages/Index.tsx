@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import ArticleCard from '@/components/ArticleCard';
@@ -7,7 +7,10 @@ import { useBlogStore, Category } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 
 const CategorySection = ({ title, category }: { title: string; category: Category }) => {
-  const articles = useBlogStore((state) => state.getArticlesByCategory(category));
+  // Use useMemo to prevent unnecessary recalculations on each render
+  const articles = useMemo(() => {
+    return useBlogStore.getState().getArticlesByCategory(category);
+  }, [category]);
   
   if (articles.length === 0) return null;
   
@@ -32,7 +35,10 @@ const CategorySection = ({ title, category }: { title: string; category: Categor
 };
 
 const Index = () => {
-  const featuredArticles = useBlogStore((state) => state.getFeaturedArticles());
+  // Use useMemo to prevent unnecessary recalculations on each render
+  const featuredArticles = useMemo(() => {
+    return useBlogStore.getState().getFeaturedArticles();
+  }, []);
   
   useEffect(() => {
     window.scrollTo(0, 0);

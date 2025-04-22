@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import ShareButtons from '@/components/ShareButtons';
@@ -9,12 +9,17 @@ import ReactMarkdown from 'react-markdown';
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const article = useBlogStore((state) => state.getArticleBySlug(slug || ''));
+  
+  // Use useMemo to prevent unnecessary recalculations on each render
+  const article = useMemo(() => {
+    if (!slug) return null;
+    return useBlogStore.getState().getArticleBySlug(slug);
+  }, [slug]);
   
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    if (!article) {
+    if (!article && slug) {
       navigate('/not-found', { replace: true });
     }
   }, [article, navigate, slug]);
