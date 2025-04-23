@@ -1,82 +1,50 @@
 
-import { useEffect, useState, createContext, useContext } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Session, User } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
-
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+import { useState, createContext, useContext } from "react";
 
 type AuthContextType = {
-  user: User | null;
-  session: Session | null;
-  profile: Profile | null;
+  user: { email: string } | null;
   loading: boolean;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<boolean>;
+  signOut: () => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  session: null,
-  profile: null,
-  loading: true,
-  signOut: async () => {},
+  loading: false,
+  signIn: async () => false,
+  signOut: () => {},
 });
 
 export function useSupabaseAuth() {
   return useContext(AuthContext);
 }
 
+const ADMIN_EMAIL = "admin@techhorizon.com";
+const ADMIN_PASSWORD = "admin123";
+
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-    });
-
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    // simple admin email/password check
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      setUser({ email });
       setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    // Fetch user profile when logged in
-    if (user) {
-      setLoading(true);
-      supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single()
-        .then(({ data }) => {
-          setProfile(data as Profile | null);
-          setLoading(false);
-        });
+      return true;
     } else {
-      setProfile(null);
       setLoading(false);
+      return false;
     }
-  }, [user]);
+  };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const signOut = () => {
     setUser(null);
-    setSession(null);
-    setProfile(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
