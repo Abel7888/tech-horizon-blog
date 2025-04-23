@@ -1,13 +1,13 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useBlogStore } from '@/lib/db';
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { currentUser, logout } = useBlogStore();
+  const { user, profile, signOut } = useSupabaseAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -36,18 +36,16 @@ const Navbar = () => {
             Supply Chain
           </Link>
           
-          {currentUser ? (
+          {user ? (
             <div className="flex items-center space-x-4">
-              {currentUser.isAdmin && (
-                <Link to="/admin/dashboard">
-                  <Button variant="outline">Dashboard</Button>
-                </Link>
-              )}
-              <Button onClick={logout} variant="ghost">Logout</Button>
+              <span className="text-gray-500">
+                {profile?.full_name || profile?.email || "User"}
+              </span>
+              <Button onClick={signOut} variant="ghost">Logout</Button>
             </div>
           ) : (
-            <Link to="/admin/login">
-              <Button variant="outline">Admin Login</Button>
+            <Link to="/auth">
+              <Button variant="outline">Login / Sign Up</Button>
             </Link>
           )}
         </div>
@@ -98,20 +96,16 @@ const Navbar = () => {
               Supply Chain
             </Link>
             
-            {currentUser ? (
+            {user ? (
               <div className="flex flex-col space-y-2">
-                {currentUser.isAdmin && (
-                  <Link to="/admin/dashboard" onClick={toggleMenu}>
-                    <Button variant="outline" className="w-full">Dashboard</Button>
-                  </Link>
-                )}
-                <Button onClick={() => { logout(); toggleMenu(); }} variant="ghost" className="w-full">
+                <span className="px-4">{profile?.full_name || profile?.email || "User"}</span>
+                <Button onClick={() => { signOut(); toggleMenu(); }} variant="ghost" className="w-full">
                   Logout
                 </Button>
               </div>
             ) : (
-              <Link to="/admin/login" onClick={toggleMenu}>
-                <Button variant="outline" className="w-full">Admin Login</Button>
+              <Link to="/auth" onClick={toggleMenu}>
+                <Button variant="outline" className="w-full">Login / Sign Up</Button>
               </Link>
             )}
           </div>
