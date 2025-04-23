@@ -12,7 +12,6 @@ import Dashboard from "./pages/admin/Dashboard";
 import ArticleForm from "./pages/admin/ArticleForm";
 import NotFound from "./pages/NotFound";
 import { SupabaseAuthProvider } from "@/hooks/useSupabaseAuth";
-import AuthPage from "./pages/AuthPage";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +28,6 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/category/:category" element={<CategoryPage />} />
               <Route path="/article/:slug" element={<ArticlePage />} />
-              <Route path="/auth" element={<AuthPage />} />
               
               {/* Admin Routes */}
               <Route path="/admin/login" element={<LoginPage />} />
