@@ -16,7 +16,7 @@ const Navbar = () => {
     <nav className="py-4 border-b border-gray-200">
       <div className="container px-4 mx-auto flex items-center justify-between">
         <Link to="/" className="text-2xl font-bold text-tech-purple">
-          TechHorizon
+          Data Shield Partners
         </Link>
         
         {/* Desktop Navigation */}
