@@ -16,17 +16,18 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 const ArticleForm = () => {
   const { id } = useParams<{ id: string }>();
   const isEditing = Boolean(id);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
   
   const articles = useBlogStore((state) => state.articles);
   const addArticle = useBlogStore((state) => state.addArticle);
   const updateArticle = useBlogStore((state) => state.updateArticle);
-  const currentUser = useBlogStore((state) => state.currentUser);
   
   const [formData, setFormData] = useState<Partial<Article>>({
     title: '',
@@ -40,9 +41,11 @@ const ArticleForm = () => {
     featured: false
   });
   
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   useEffect(() => {
     // Protect the route
-    if (!currentUser || !currentUser.isAdmin) {
+    if (!user) {
       navigate('/admin/login');
       return;
     }
@@ -59,7 +62,7 @@ const ArticleForm = () => {
         navigate('/admin/dashboard');
       }
     }
-  }, [currentUser, navigate, isEditing, id, articles]);
+  }, [user, navigate, isEditing, id, articles]);
   
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -89,8 +92,10 @@ const ArticleForm = () => {
     e.preventDefault();
     
     try {
+      setIsSubmitting(true);
+      
       if (isEditing && id) {
-        updateArticle(id, formData);
+        updateArticle(id, formData as Partial<Article>);
         toast({
           title: "Success!",
           description: "Article updated successfully.",
@@ -109,22 +114,28 @@ const ArticleForm = () => {
         });
       }
       
-      navigate('/admin/dashboard');
+      // Wait a moment before redirecting to ensure state is updated
+      setTimeout(() => {
+        navigate('/admin/dashboard');
+        setIsSubmitting(false);
+      }, 500);
     } catch (error) {
+      console.error("Error saving article:", error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
     }
   };
   
-  if (!currentUser || !currentUser.isAdmin) {
+  if (!user) {
     return null;
   }
   
   return (
-    <Layout title={`${isEditing ? 'Edit' : 'New'} Article - TechHorizon`}>
+    <Layout title={`${isEditing ? 'Edit' : 'New'} Article - Data Shield Partners`}>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">
@@ -261,11 +272,15 @@ const ArticleForm = () => {
                   type="button" 
                   variant="outline"
                   onClick={() => navigate('/admin/dashboard')}
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {isEditing ? 'Update Article' : 'Create Article'}
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Saving...' : isEditing ? 'Update Article' : 'Create Article'}
                 </Button>
               </div>
             </form>

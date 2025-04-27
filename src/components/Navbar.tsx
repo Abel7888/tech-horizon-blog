@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useBlogStore } from '@/lib/db';
@@ -9,6 +9,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useSupabaseAuth();
+  const location = useLocation();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -21,27 +22,27 @@ const Navbar = () => {
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6">
-          <Link to="/" className="text-gray-700 hover:text-tech-purple transition-colors">
+          <Link to="/" className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/' ? 'font-medium text-tech-purple' : ''}`}>
             Home
           </Link>
-          <Link to="/category/healthcare" className="text-gray-700 hover:text-tech-purple transition-colors">
+          <Link to="/category/healthcare" className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/category/healthcare' ? 'font-medium text-tech-purple' : ''}`}>
             Healthcare
           </Link>
-          <Link to="/category/finance" className="text-gray-700 hover:text-tech-purple transition-colors">
+          <Link to="/category/finance" className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/category/finance' ? 'font-medium text-tech-purple' : ''}`}>
             Finance
           </Link>
-          <Link to="/category/real-estate" className="text-gray-700 hover:text-tech-purple transition-colors">
+          <Link to="/category/real-estate" className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/category/real-estate' ? 'font-medium text-tech-purple' : ''}`}>
             Real Estate
           </Link>
-          <Link to="/category/supply-chain" className="text-gray-700 hover:text-tech-purple transition-colors">
+          <Link to="/category/supply-chain" className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/category/supply-chain' ? 'font-medium text-tech-purple' : ''}`}>
             Supply Chain
           </Link>
           
           {user ? (
             <div className="flex items-center space-x-4">
-              <span className="text-gray-500">
-                {user.email || "Admin"}
-              </span>
+              <Link to="/admin/dashboard" className="text-tech-purple hover:text-tech-purple/80 transition-colors">
+                Dashboard
+              </Link>
               <Button onClick={signOut} variant="ghost">Logout</Button>
             </div>
           ) : (
@@ -63,35 +64,35 @@ const Navbar = () => {
           <div className="flex flex-col space-y-4">
             <Link 
               to="/" 
-              className="text-gray-700 hover:text-tech-purple transition-colors" 
+              className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/' ? 'font-medium text-tech-purple' : ''}`}
               onClick={toggleMenu}
             >
               Home
             </Link>
             <Link 
               to="/category/healthcare" 
-              className="text-gray-700 hover:text-tech-purple transition-colors"
+              className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/category/healthcare' ? 'font-medium text-tech-purple' : ''}`}
               onClick={toggleMenu}
             >
               Healthcare
             </Link>
             <Link 
               to="/category/finance" 
-              className="text-gray-700 hover:text-tech-purple transition-colors"
+              className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/category/finance' ? 'font-medium text-tech-purple' : ''}`}
               onClick={toggleMenu}
             >
               Finance
             </Link>
             <Link 
               to="/category/real-estate" 
-              className="text-gray-700 hover:text-tech-purple transition-colors"
+              className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/category/real-estate' ? 'font-medium text-tech-purple' : ''}`}
               onClick={toggleMenu}
             >
               Real Estate
             </Link>
             <Link 
               to="/category/supply-chain" 
-              className="text-gray-700 hover:text-tech-purple transition-colors"
+              className={`text-gray-700 hover:text-tech-purple transition-colors ${location.pathname === '/category/supply-chain' ? 'font-medium text-tech-purple' : ''}`}
               onClick={toggleMenu}
             >
               Supply Chain
@@ -99,7 +100,13 @@ const Navbar = () => {
             
             {user ? (
               <div className="flex flex-col space-y-2">
-                <span className="px-4">{user.email || "Admin"}</span>
+                <Link 
+                  to="/admin/dashboard" 
+                  className="text-tech-purple hover:text-tech-purple/80 transition-colors"
+                  onClick={toggleMenu}
+                >
+                  Dashboard
+                </Link>
                 <Button onClick={() => { signOut(); toggleMenu(); }} variant="ghost" className="w-full">
                   Logout
                 </Button>
