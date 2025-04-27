@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -7,7 +8,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, signOut } = useSupabaseAuth();
+  const { user, signOut } = useSupabaseAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -39,13 +40,13 @@ const Navbar = () => {
           {user ? (
             <div className="flex items-center space-x-4">
               <span className="text-gray-500">
-                {profile?.full_name || profile?.email || "User"}
+                {user.email || "Admin"}
               </span>
               <Button onClick={signOut} variant="ghost">Logout</Button>
             </div>
           ) : (
-            <Link to="/auth">
-              <Button variant="outline">Login / Sign Up</Button>
+            <Link to="/admin/login">
+              <Button variant="outline">Admin Login</Button>
             </Link>
           )}
         </div>
@@ -98,14 +99,14 @@ const Navbar = () => {
             
             {user ? (
               <div className="flex flex-col space-y-2">
-                <span className="px-4">{profile?.full_name || profile?.email || "User"}</span>
+                <span className="px-4">{user.email || "Admin"}</span>
                 <Button onClick={() => { signOut(); toggleMenu(); }} variant="ghost" className="w-full">
                   Logout
                 </Button>
               </div>
             ) : (
-              <Link to="/auth" onClick={toggleMenu}>
-                <Button variant="outline" className="w-full">Login / Sign Up</Button>
+              <Link to="/admin/login" onClick={toggleMenu}>
+                <Button variant="outline" className="w-full">Admin Login</Button>
               </Link>
             )}
           </div>
