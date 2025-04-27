@@ -6,6 +6,7 @@ import { useBlogStore, Article } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Edit, Trash2, Plus } from 'lucide-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import {
   Table,
   TableBody,
@@ -20,7 +21,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from '@/components/ui/use-toast';
 
@@ -32,19 +32,19 @@ const Dashboard = () => {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
   const blogArticles = useBlogStore((state) => state.articles);
   const deleteArticle = useBlogStore((state) => state.deleteArticle);
-  const currentUser = useBlogStore((state) => state.currentUser);
   
+  // Check authentication
   useEffect(() => {
-    // Protect the route
-    if (!currentUser || !currentUser.isAdmin) {
+    if (!user) {
       navigate('/admin/login');
       return;
     }
     
     setArticles(blogArticles);
-  }, [currentUser, navigate, blogArticles]);
+  }, [user, navigate, blogArticles]);
   
   useEffect(() => {
     if (searchTerm) {
@@ -77,7 +77,8 @@ const Dashboard = () => {
     }
   };
   
-  if (!currentUser || !currentUser.isAdmin) {
+  // If not authenticated, don't render anything
+  if (!user) {
     return null;
   }
   
@@ -197,6 +198,14 @@ const Dashboard = () => {
       </Dialog>
     </Layout>
   );
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
 };
 
 export default Dashboard;

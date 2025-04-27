@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -15,31 +15,47 @@ const LoginPage = () => {
   const { toast } = useToast();
   const { user, signIn, loading } = useSupabaseAuth();
 
-  if (user) {
-    navigate("/admin/dashboard");
-    return null;
-  }
+  // Check if user is already logged in and redirect to dashboard
+  useEffect(() => {
+    if (user) {
+      navigate("/admin/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const success = await signIn(email, password);
+    try {
+      const success = await signIn(email, password);
 
-    if (success) {
+      if (success) {
+        toast({
+          title: "Login successful!",
+          description: "Welcome to the admin dashboard.",
+        });
+        navigate("/admin/dashboard");
+      } else {
+        toast({
+          title: "Login failed",
+          description:
+            "Invalid email or password. Try admin@techhorizon.com / admin123",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
       toast({
-        title: "Login successful!",
-        description: "Welcome to the admin dashboard.",
-      });
-      navigate("/admin/dashboard");
-    } else {
-      toast({
-        title: "Login failed",
-        description:
-          "Invalid email or password. Try admin@techhorizon.com / admin123",
+        title: "Login error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
   };
+
+  // If already logged in, don't show the login form
+  if (user) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <Layout title="Admin Login - TechHorizon">

@@ -1,5 +1,5 @@
 
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 
 type AuthContextType = {
   user: { email: string } | null;
@@ -19,6 +19,7 @@ export function useSupabaseAuth() {
   return useContext(AuthContext);
 }
 
+// Hardcoded admin credentials
 const ADMIN_EMAIL = "admin@techhorizon.com";
 const ADMIN_PASSWORD = "admin123";
 
@@ -26,14 +27,38 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Check for user session in localStorage on initial load
+  useEffect(() => {
+    const savedUser = localStorage.getItem('techhorizon_admin');
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        // If there's an error parsing, clear the storage
+        localStorage.removeItem('techhorizon_admin');
+      }
+    }
+  }, []);
+
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    // simple admin email/password check
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      setUser({ email });
-      setLoading(false);
-      return true;
-    } else {
+    
+    try {
+      // Simple admin email/password check
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        const userData = { email };
+        setUser(userData);
+        // Store admin session
+        localStorage.setItem('techhorizon_admin', JSON.stringify(userData));
+        setLoading(false);
+        return true;
+      } else {
+        setLoading(false);
+        return false;
+      }
+    } catch (error) {
+      console.error("Login error:", error);
       setLoading(false);
       return false;
     }
@@ -41,6 +66,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const signOut = () => {
     setUser(null);
+    localStorage.removeItem('techhorizon_admin');
   };
 
   return (
