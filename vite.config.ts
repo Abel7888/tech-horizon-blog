@@ -21,6 +21,13 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    outDir: 'build', // Changed from default 'dist' to 'build' for Vercel compatibility
+    outDir: 'build', 
+    sourcemap: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false, // Keep console logs for debugging
+      },
+    },
   },
 }));
