@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -100,6 +99,7 @@ const ArticleForm = () => {
           title: "Success!",
           description: "Article updated successfully.",
         });
+        console.log("Updated article:", id, formData);
       } else {
         // Create new article
         const newArticle = {
@@ -112,6 +112,14 @@ const ArticleForm = () => {
           title: "Success!",
           description: "New article created successfully.",
         });
+        console.log("Created new article:", newArticle);
+      }
+      
+      // Force storage update
+      const currentStorage = localStorage.getItem('blog-storage');
+      if (currentStorage) {
+        const data = JSON.parse(currentStorage);
+        localStorage.setItem('blog-storage', JSON.stringify(data));
       }
       
       // Wait a moment before redirecting to ensure state is updated

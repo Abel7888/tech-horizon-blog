@@ -44,6 +44,9 @@ const Dashboard = () => {
     }
     
     setArticles(blogArticles);
+    
+    // Debug log to help track article data
+    console.log('Dashboard loaded articles:', blogArticles);
   }, [user, navigate, blogArticles]);
   
   useEffect(() => {
@@ -70,10 +73,19 @@ const Dashboard = () => {
       setIsDialogOpen(false);
       setArticleToDelete(null);
       
+      // Force storage update
+      const currentStorage = localStorage.getItem('blog-storage');
+      if (currentStorage) {
+        const data = JSON.parse(currentStorage);
+        localStorage.setItem('blog-storage', JSON.stringify(data));
+      }
+      
       toast({
         title: "Article deleted",
         description: "The article has been successfully deleted.",
       });
+      
+      console.log('Article deleted:', articleToDelete);
     }
   };
   
@@ -198,14 +210,6 @@ const Dashboard = () => {
       </Dialog>
     </Layout>
   );
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
 };
 
 export default Dashboard;

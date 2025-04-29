@@ -3,7 +3,7 @@
 // In a real application, you would connect to a real database
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type Category = 'healthcare' | 'finance' | 'real-estate' | 'supply-chain';
 
@@ -231,6 +231,26 @@ export const useBlogStore = create<BlogStore>()(
     }),
     {
       name: 'blog-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        users: state.users,
+        articles: state.articles,
+        currentUser: state.currentUser,
+      }),
+      version: 1, // Add version for potential migrations in the future
     }
   )
 );
+
+// Add console logging to help debug persistence issues
+if (typeof window !== 'undefined') {
+  // Log stored data on page load
+  console.log('Initial blog data:', JSON.parse(localStorage.getItem('blog-storage') || '{}'));
+  
+  // Listen for storage events to help debug
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'blog-storage') {
+      console.log('Storage updated:', JSON.parse(event.newValue || '{}'));
+    }
+  });
+}
