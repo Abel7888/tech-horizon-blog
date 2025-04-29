@@ -244,13 +244,18 @@ export const useBlogStore = create<BlogStore>()(
 
 // Add console logging to help debug persistence issues
 if (typeof window !== 'undefined') {
-  // Log stored data on page load
-  console.log('Initial blog data:', JSON.parse(localStorage.getItem('blog-storage') || '{}'));
-  
-  // Listen for storage events to help debug
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'blog-storage') {
-      console.log('Storage updated:', JSON.parse(event.newValue || '{}'));
-    }
-  });
+  try {
+    // Log stored data on page load
+    const storedData = localStorage.getItem('blog-storage');
+    console.log('Initial blog data:', storedData ? JSON.parse(storedData) : '{}');
+    
+    // Listen for storage events to help debug
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'blog-storage') {
+        console.log('Storage updated:', event.newValue ? JSON.parse(event.newValue) : '{}');
+      }
+    });
+  } catch (error) {
+    console.error('Error accessing localStorage:', error);
+  }
 }
