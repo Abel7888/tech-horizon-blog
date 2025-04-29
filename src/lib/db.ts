@@ -177,70 +177,136 @@ const sampleUsers: User[] = [
   }
 ];
 
-export const useBlogStore = create<BlogStore>()(
-  persist(
-    (set, get) => ({
+const createBlogStore = () => {
+  // Wrap creation in a function to better handle errors
+  try {
+    return create<BlogStore>()(
+      persist(
+        (set, get) => ({
+          users: sampleUsers,
+          articles: sampleArticles,
+          currentUser: null,
+          
+          addUser: (user) => set((state) => ({ 
+            users: [...state.users, user] 
+          })),
+          
+          addArticle: (article) => set((state) => ({ 
+            articles: [...state.articles, article] 
+          })),
+          
+          updateArticle: (id, updatedArticle) => set((state) => ({ 
+            articles: state.articles.map((article) => 
+              article.id === id ? { ...article, ...updatedArticle } : article
+            ) 
+          })),
+          
+          deleteArticle: (id) => set((state) => ({ 
+            articles: state.articles.filter((article) => article.id !== id) 
+          })),
+          
+          getArticleBySlug: (slug) => {
+            return get().articles.find((article) => article.slug === slug);
+          },
+          
+          getArticlesByCategory: (category) => {
+            return get().articles.filter((article) => article.category === category);
+          },
+          
+          getFeaturedArticles: () => {
+            return get().articles.filter((article) => article.featured);
+          },
+          
+          login: (email, password) => {
+            const user = get().users.find(
+              (u) => u.email === email && u.password === password
+            );
+            
+            if (user) {
+              set({ currentUser: user });
+              return true;
+            }
+            
+            return false;
+          },
+          
+          logout: () => set({ currentUser: null }),
+        }),
+        {
+          name: 'blog-storage',
+          storage: createJSONStorage(() => {
+            // Safety wrapper around localStorage
+            return {
+              getItem: (name) => {
+                try {
+                  const item = localStorage.getItem(name);
+                  return item;
+                } catch (error) {
+                  console.error('Error accessing localStorage (getItem):', error);
+                  return null;
+                }
+              },
+              setItem: (name, value) => {
+                try {
+                  localStorage.setItem(name, value);
+                } catch (error) {
+                  console.error('Error accessing localStorage (setItem):', error);
+                }
+              },
+              removeItem: (name) => {
+                try {
+                  localStorage.removeItem(name);
+                } catch (error) {
+                  console.error('Error accessing localStorage (removeItem):', error);
+                }
+              }
+            };
+          }),
+          partialize: (state) => ({
+            users: state.users,
+            articles: state.articles,
+            currentUser: state.currentUser,
+          }),
+          version: 1, // Add version for potential migrations in the future
+        }
+      )
+    );
+  } catch (error) {
+    console.error('Error creating store:', error);
+    // Fallback to non-persisted store if localStorage is unavailable
+    return create<BlogStore>()((set, get) => ({
       users: sampleUsers,
       articles: sampleArticles,
       currentUser: null,
-      
-      addUser: (user) => set((state) => ({ 
-        users: [...state.users, user] 
-      })),
-      
-      addArticle: (article) => set((state) => ({ 
-        articles: [...state.articles, article] 
-      })),
-      
+      addUser: (user) => set((state) => ({ users: [...state.users, user] })),
+      addArticle: (article) => set((state) => ({ articles: [...state.articles, article] })),
       updateArticle: (id, updatedArticle) => set((state) => ({ 
         articles: state.articles.map((article) => 
           article.id === id ? { ...article, ...updatedArticle } : article
         ) 
       })),
-      
       deleteArticle: (id) => set((state) => ({ 
         articles: state.articles.filter((article) => article.id !== id) 
       })),
-      
-      getArticleBySlug: (slug) => {
-        return get().articles.find((article) => article.slug === slug);
-      },
-      
-      getArticlesByCategory: (category) => {
-        return get().articles.filter((article) => article.category === category);
-      },
-      
-      getFeaturedArticles: () => {
-        return get().articles.filter((article) => article.featured);
-      },
-      
+      getArticleBySlug: (slug) => get().articles.find((article) => article.slug === slug),
+      getArticlesByCategory: (category) => get().articles.filter((article) => article.category === category),
+      getFeaturedArticles: () => get().articles.filter((article) => article.featured),
       login: (email, password) => {
         const user = get().users.find(
           (u) => u.email === email && u.password === password
         );
-        
         if (user) {
           set({ currentUser: user });
           return true;
         }
-        
         return false;
       },
-      
       logout: () => set({ currentUser: null }),
-    }),
-    {
-      name: 'blog-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        users: state.users,
-        articles: state.articles,
-        currentUser: state.currentUser,
-      }),
-      version: 1, // Add version for potential migrations in the future
-    }
-  )
-);
+    }));
+  }
+};
+
+export const useBlogStore = createBlogStore();
 
 // Add console logging to help debug persistence issues
 if (typeof window !== 'undefined') {
