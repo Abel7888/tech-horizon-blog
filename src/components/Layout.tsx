@@ -15,7 +15,7 @@ interface LayoutProps {
 
 const Layout = ({
   children,
-  title = 'TechHorizon - Emerging Technology Insights',
+  title = 'Data Shield Partners Blog - Emerging Technology Insights',
   description = 'Discover the latest emerging technologies in healthcare, finance, real estate and supply chain industries.',
   keywords = 'emerging technology, tech innovations, healthcare technology, fintech, proptech, supply chain technology',
   ogImage = '/placeholder.svg',
