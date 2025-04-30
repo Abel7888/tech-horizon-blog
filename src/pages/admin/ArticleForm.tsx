@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -115,18 +116,20 @@ const ArticleForm = () => {
         console.log("Created new article:", newArticle);
       }
       
-      // Force storage update
-      const currentStorage = localStorage.getItem('blog-storage');
-      if (currentStorage) {
-        const data = JSON.parse(currentStorage);
-        localStorage.setItem('blog-storage', JSON.stringify(data));
+      // Force manual sync to ensure data is persisted
+      try {
+        if (typeof window !== 'undefined' && (window as any).syncBlogStore) {
+          (window as any).syncBlogStore();
+        }
+      } catch (syncError) {
+        console.error("Error syncing data:", syncError);
       }
       
       // Wait a moment before redirecting to ensure state is updated
       setTimeout(() => {
         navigate('/admin/dashboard');
         setIsSubmitting(false);
-      }, 500);
+      }, 1000);
     } catch (error) {
       console.error("Error saving article:", error);
       toast({

@@ -177,33 +177,103 @@ const sampleUsers: User[] = [
   }
 ];
 
+// Enhance localStorage handling with better error trapping and logging
+const localStorageHandler = {
+  getItem: (name: string): string | null => {
+    try {
+      const item = localStorage.getItem(name);
+      return item;
+    } catch (error) {
+      console.error('Error accessing localStorage (getItem):', error);
+      return null;
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    try {
+      localStorage.setItem(name, value);
+      // Verify data was set correctly
+      const storedItem = localStorage.getItem(name);
+      if (storedItem !== value) {
+        console.warn('LocalStorage verification failed - data mismatch');
+      }
+    } catch (error) {
+      console.error('Error accessing localStorage (setItem):', error);
+    }
+  },
+  removeItem: (name: string): void => {
+    try {
+      localStorage.removeItem(name);
+    } catch (error) {
+      console.error('Error accessing localStorage (removeItem):', error);
+    }
+  }
+};
+
 const createBlogStore = () => {
-  // Wrap creation in a function to better handle errors
+  // Check if we already have persisted data
+  let initialData = {
+    users: sampleUsers,
+    articles: sampleArticles,
+    currentUser: null
+  };
+  
+  try {
+    const storedData = localStorage.getItem('blog-storage');
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      // Only use stored data if it has valid structure
+      if (parsedData && parsedData.state && 
+          Array.isArray(parsedData.state.articles) && 
+          Array.isArray(parsedData.state.users)) {
+        console.log('Found valid stored data:', parsedData);
+        initialData = parsedData.state;
+      } else {
+        console.warn('Found invalid stored data, using default data');
+      }
+    } else {
+      console.log('No stored data found, using default data');
+    }
+  } catch (error) {
+    console.error('Error loading stored data:', error);
+  }
+  
   try {
     return create<BlogStore>()(
       persist(
         (set, get) => ({
-          users: sampleUsers,
-          articles: sampleArticles,
-          currentUser: null,
+          users: initialData.users,
+          articles: initialData.articles,
+          currentUser: initialData.currentUser,
           
-          addUser: (user) => set((state) => ({ 
-            users: [...state.users, user] 
-          })),
+          addUser: (user) => set((state) => {
+            const updatedState = { users: [...state.users, user] };
+            console.log('Adding user:', user, 'New state:', updatedState);
+            return updatedState;
+          }),
           
-          addArticle: (article) => set((state) => ({ 
-            articles: [...state.articles, article] 
-          })),
+          addArticle: (article) => set((state) => {
+            const updatedState = { articles: [...state.articles, article] };
+            console.log('Adding article:', article, 'New state:', updatedState);
+            return updatedState;
+          }),
           
-          updateArticle: (id, updatedArticle) => set((state) => ({ 
-            articles: state.articles.map((article) => 
-              article.id === id ? { ...article, ...updatedArticle } : article
-            ) 
-          })),
+          updateArticle: (id, updatedArticle) => set((state) => {
+            const updatedState = { 
+              articles: state.articles.map((article) => 
+                article.id === id ? { ...article, ...updatedArticle } : article
+              )
+            };
+            console.log('Updating article:', id, updatedArticle, 'New state:', updatedState);
+            return updatedState;
+          }),
           
-          deleteArticle: (id) => set((state) => ({ 
-            articles: state.articles.filter((article) => article.id !== id) 
-          })),
+          deleteArticle: (id) => set((state) => {
+            const updatedState = { 
+              articles: state.articles.filter((article) => article.id !== id)
+            };
+            console.log('Deleting article:', id, 'New state:', updatedState);
+            return updatedState;
+          }),
           
           getArticleBySlug: (slug) => {
             return get().articles.find((article) => article.slug === slug);
@@ -234,40 +304,20 @@ const createBlogStore = () => {
         }),
         {
           name: 'blog-storage',
-          storage: createJSONStorage(() => {
-            // Safety wrapper around localStorage
-            return {
-              getItem: (name) => {
-                try {
-                  const item = localStorage.getItem(name);
-                  return item;
-                } catch (error) {
-                  console.error('Error accessing localStorage (getItem):', error);
-                  return null;
-                }
-              },
-              setItem: (name, value) => {
-                try {
-                  localStorage.setItem(name, value);
-                } catch (error) {
-                  console.error('Error accessing localStorage (setItem):', error);
-                }
-              },
-              removeItem: (name) => {
-                try {
-                  localStorage.removeItem(name);
-                } catch (error) {
-                  console.error('Error accessing localStorage (removeItem):', error);
-                }
-              }
-            };
-          }),
+          storage: createJSONStorage(() => localStorageHandler),
           partialize: (state) => ({
             users: state.users,
             articles: state.articles,
             currentUser: state.currentUser,
           }),
-          version: 1, // Add version for potential migrations in the future
+          version: 1,
+          onRehydrateStorage: () => (state) => {
+            if (state) {
+              console.log('Blog store rehydrated successfully');
+            } else {
+              console.error('Blog store failed to rehydrate');
+            }
+          },
         }
       )
     );
@@ -308,12 +358,35 @@ const createBlogStore = () => {
 
 export const useBlogStore = createBlogStore();
 
-// Add console logging to help debug persistence issues
+// Add enhanced console logging to help debug persistence issues
 if (typeof window !== 'undefined') {
   try {
     // Log stored data on page load
     const storedData = localStorage.getItem('blog-storage');
     console.log('Initial blog data:', storedData ? JSON.parse(storedData) : '{}');
+    
+    // Add a manual sync function that can be called after critical operations
+    (window as any).syncBlogStore = () => {
+      try {
+        const currentState = useBlogStore.getState();
+        const dataToStore = {
+          users: currentState.users,
+          articles: currentState.articles,
+          currentUser: currentState.currentUser
+        };
+        
+        localStorage.setItem('blog-storage', JSON.stringify({
+          state: dataToStore,
+          version: 1
+        }));
+        
+        console.log('Manual sync complete:', dataToStore);
+        return true;
+      } catch (error) {
+        console.error('Manual sync failed:', error);
+        return false;
+      }
+    };
     
     // Listen for storage events to help debug
     window.addEventListener('storage', (event) => {
