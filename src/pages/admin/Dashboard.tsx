@@ -73,26 +73,12 @@ const Dashboard = () => {
       setIsDialogOpen(false);
       setArticleToDelete(null);
       
-      // Force manual sync
-      try {
-        if (typeof window !== 'undefined' && (window as any).syncBlogStore) {
-          (window as any).syncBlogStore();
-        }
-        
-        toast({
-          title: "Article deleted",
-          description: "The article has been successfully deleted.",
-        });
-        
-        console.log('Article deleted:', articleToDelete);
-      } catch (error) {
-        console.error('Error during delete operation:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete article. Please try again.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Article deleted",
+        description: "The article has been successfully deleted.",
+      });
+      
+      console.log('Article deleted:', articleToDelete);
     }
   };
   
