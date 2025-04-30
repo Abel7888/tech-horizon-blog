@@ -101,7 +101,7 @@ const LoginPage = () => {
             </form>
 
             <div className="mt-4 text-center text-sm text-gray-500">
-              <p>Demo credentials: admin@techhorizon.com / admin123</p>
+              <p></p>
             </div>
           </div>
         </div>
